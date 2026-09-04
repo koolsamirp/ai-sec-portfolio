@@ -1,0 +1,5 @@
+GROQ_API_KEY="your_groq_api_key_here"
+GMAIL_USER="your_email@gmail.com"
+GMAIL_APP_PASSWORD="your_gmail_app_password_here"
+EMAIL_TO="recipient_email@example.com"
+OTX_API_KEY="your_otx_api_key_here"

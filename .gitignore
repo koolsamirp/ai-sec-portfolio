@@ -1,0 +1,12 @@
+# SECRETS (NEVER COMMIT THESE)
+.ai_intel_config
+*.env
+
+# DATA & DATABASES
+*.duckdb
+*.duckdb.wal
+*_cache.txt
+*_archive/
+ai_gateway_logs/
+data/
+__pycache__/

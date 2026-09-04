@@ -1,0 +1,12 @@
+[
+  {"canonical": "APT15", "aliases": ["APT15", "Vixen Panda", "Mirage", "Ke3chang", "Nylon Typhoon"]},
+  {"canonical": "APT28", "aliases": ["APT28", "Fancy Bear", "Sofacy", "Forest Blizzard"]},
+  {"canonical": "APT29", "aliases": ["APT29", "Cozy Bear", "Nobelium", "Midnight Blizzard"]},
+  {"canonical": "APT43", "aliases": ["APT43", "Velvet Chollima", "Kimsuky", "Emerald Sleet"]},
+  {"canonical": "Bitter", "aliases": ["Bitter", "Hazy Tiger"]},
+  {"canonical": "Charming Kitten", "aliases": ["Charming Kitten", "APT42", "Mint Sandstorm"]},
+  {"canonical": "Contagious Interview", "aliases": ["Contagious Interview", "Beaver Tail", "Invisible Ferret", "Famous Chollima"]},
+  {"canonical": "Cosmic Wolf", "aliases": ["Cosmic Wolf", "Sea Turtle", "Marbled Dust"]},
+  {"canonical": "Cruel Jackal", "aliases": ["Cruel Jackal", "MoleRats", "WIRTE"]},
+  {"canonical": "Lazarus", "aliases": ["Lazarus", "Diamond Sleet"]}
+]
