@@ -3,39 +3,45 @@
 DLP Daily Observability Report
 Reads APISIX logs (24h window) -> Calculates Hits/Misses -> Redacts Headers -> Emails Report
 """
-import os
-import sys
 import json
-import re
 import smtplib
-import html
-from datetime import datetime, timezone, timedelta
+import sys
+from datetime import datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
 
+# Local, unit-tested PII detection (emails, Luhn-valid cards, IBANs, API keys).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from dlp_detect import find_pii, redact
+
 LOG_FILE = Path.home() / "ai_gateway_logs" / "groq_audit.log"
 STATE_FILE = Path.home() / ".dlp_metrics_state.json"
 
-# Regex patterns to detect PII in logs
-EMAIL_REGEX = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
-CC_REGEX = re.compile(r"\b(?:\d[ -]*?){13,19}\b")
-
 def load_config():
     config_path = Path.home() / ".ai_intel_config"
-    if not config_path.exists(): sys.exit("Error: Config file not found.")
+    if not config_path.exists():
+        sys.exit("Error: Config file not found.")
+    wanted = {"GMAIL_USER", "GMAIL_APP_PASSWORD", "EMAIL_TO"}
     config = {}
-    with open(config_path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("GMAIL_USER="): config["GMAIL_USER"] = line.split("=", 1)[1].strip().strip('"').strip("'")
-            elif line.startswith("GMAIL_APP_PASSWORD="): config["GMAIL_APP_PASSWORD"] = line.split("=", 1)[1].strip().strip('"').strip("'")
-            elif line.startswith("EMAIL_TO="): config["EMAIL_TO"] = line.split("=", 1)[1].strip().strip('"').strip("'")
+    with open(config_path, encoding="utf-8") as f:
+        for raw in f:
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            if key in wanted:
+                config[key] = val.strip().strip('"').strip("'")
+    missing = wanted - config.keys()
+    if missing:
+        sys.exit(f"Error: missing required config keys: {', '.join(sorted(missing))}")
     return config
 
 def load_state():
     if not STATE_FILE.exists():
         return {"first_run_date": "N/A", "total_runs": 0, "total_api_requests": 0}
-    with open(STATE_FILE, "r") as f:
+    with open(STATE_FILE) as f:
         return json.load(f)
 
 def analyze_logs():
@@ -54,7 +60,7 @@ def analyze_logs():
         return metrics
 
     # Stream the log file line by line (uses 0 RAM even for 1GB files)
-    with open(LOG_FILE, "r", encoding="utf-8") as f:
+    with open(LOG_FILE, encoding="utf-8") as f:
         for line in f:
             try:
                 log_data = json.loads(line.strip())
@@ -69,18 +75,18 @@ def analyze_logs():
                 req_body = log_data.get("request", {}).get("body", "")
                 resp_body = log_data.get("response", {}).get("body", "")
                 
-                # Find all PII in the raw request body
-                emails_found = EMAIL_REGEX.findall(req_body)
-                ccs_found = CC_REGEX.findall(req_body)
-                
-                total_pii_in_doc = len(emails_found) + len(ccs_found)
-                metrics["pii_detected_raw"] += total_pii_in_doc
-                
-                # Check if they leaked into Groq's response
-                for pii in emails_found + ccs_found:
+                # Detect all PII classes in the raw request body
+                pii_by_class = find_pii(req_body)
+                all_pii = [v for values in pii_by_class.values() for v in values]
+
+                metrics["pii_detected_raw"] += len(all_pii)
+
+                # Check if any detected PII leaked into Groq's response
+                for pii in all_pii:
                     if pii in resp_body:
                         metrics["full_misses"] += 1
-                        metrics["bypass_details"].append(f"Leaked PII: {pii[:4]}...")
+                        # Never emit raw PII, even partially — redact fully.
+                        metrics["bypass_details"].append(f"Leaked PII: {redact(pii)}")
                     else:
                         metrics["masked_hits"] += 1
                         
