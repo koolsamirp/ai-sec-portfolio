@@ -7,6 +7,19 @@
 *.duckdb.wal
 *_cache.txt
 *_archive/
+.*_archive/
+.otx-engine/
 ai_gateway_logs/
 data/
 __pycache__/
+
+# STATE & LOGS (may contain synthesized PII / intel)
+*.log
+.dlp_metrics_state.json
+.*_state.json
+
+# TOOLING
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/

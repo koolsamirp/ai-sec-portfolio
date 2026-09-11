@@ -1,0 +1,26 @@
+[project]
+name = "ai-sec-portfolio"
+version = "1.0.0"
+description = "AI-driven SecOps, GRC, and threat-intelligence pipeline suite"
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+# The pipeline entry-points are intentionally hidden dotfiles; do not skip them.
+force-exclude = false
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "C4"]
+ignore = [
+    "E501",   # line length handled by formatter
+    "F403",   # `import *` not used here, but keep intent explicit if added later
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E402"]                 # path-based module load before imports
+"4-DLP-Gateway/.dlp_daily_report.py" = ["E402"]  # sys.path insert before local import
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -8,7 +8,7 @@ Includes Daily Heartbeat fail-safe logic.
 import os
 import smtplib
 import urllib.request
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET  # hardened parser for untrusted remote XML (XXE-safe)
 import html
 import hashlib
 from datetime import datetime, timezone, timedelta

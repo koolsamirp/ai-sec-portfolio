@@ -50,11 +50,48 @@ Objective: Transform raw AlienVault OTX pulses into a structured, multi-actor th
 
 🚀 Setup & Configuration
 
-    Ensure Python 3 and the required libraries (groq, duckdb, requests) are installed.
-    Copy the .ai_intel_config.example file to ~/.ai_intel_config.
-    Populate it with your Groq API Key, AlienVault OTX API Key, and Gmail SMTP credentials.
-    Execute any of the pipeline scripts manually, or deploy them via Systemd timers for daily automated execution.
+1. Install dependencies (Python 3.10+):
 
-cp .ai_intel_config.example ~/.ai_intel_confignano ~/.ai_intel_config
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+   (`requirements.txt` covers `groq`, `duckdb`, `requests`, `urllib3`, `datasets`, and
+   `defusedxml`. The earlier "groq, duckdb, requests" list was incomplete — the DLP
+   traffic generator needs `datasets` and the GRC feed parser needs `defusedxml`.)
+
+2. Create your config from the example and edit it:
+
+   ```bash
+   cp .ai_intel_config.example ~/.ai_intel_config
+   nano ~/.ai_intel_config
+   ```
+
+   Populate your Groq API key, AlienVault OTX API key, and Gmail SMTP credentials.
+
+3. LLM model: set a **currently-valid** Groq model id. Groq's catalog changes and the
+   legacy id shown in some comments is no longer served, which makes every LLM call fail.
+   Confirm a live id at <https://console.groq.com/docs/models> and use that.
+
+4. Per-pipeline prerequisite files:
+   - **3-Threat-Triage** reads a rules file (`~/.ai-cve-bot-rules.txt`) — see the shipped
+     `3-Threat-Triage/.ai-cve-bot-rules.txt` for the format (target keywords + a
+     `MIN_CVSS_SCORE=` line).
+   - **5-OTX-CTI-Engine** reads a threat-actor watchlist JSON — see
+     `5-OTX-CTI-Engine/watchlist.json` for the shape.
+
+5. Run a pipeline manually, or deploy via Systemd timers for daily automation.
+
+## Development
+
+```bash
+pip install -r requirements-dev.txt
+ruff check .        # lint
+pytest              # offline unit tests (DLP detection)
+```
+
+See [CODING_GUIDELINES.md](CODING_GUIDELINES.md) for the conventions this project follows.
 
 Engineered for operational resilience, compliance automation, and sovereign threat intelligence.
